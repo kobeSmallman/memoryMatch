@@ -1,7 +1,7 @@
 import * as SQLite from 'expo-sqlite';
-
+//overall description: Fetching and inserting users and other information like scores based on what we wants to do with the infromation whether we want to add or retrieve the information
 const db = SQLite.openDatabase('game.db');
-
+//initialize the tables, scores, cards etc...
 const init = () => {
   db.transaction((tx) => {
    // tx.executeSql('DROP TABLE IF EXISTS scores;');  // I will Remove this line after the database structure is fixed
@@ -28,6 +28,7 @@ const init = () => {
     console.log("Database initialization succeeded");
   });
 };
+//for the button on homescreen to delete all the custom cards created
 const deleteAllCustomCards = (callback) => {
   db.transaction(
     (tx) => {
@@ -138,26 +139,6 @@ const fetchCardImageUris = (callback) => {
   });
 };
 
-const insertSoundUri = (uri, callback) => {
-  db.transaction(
-    (tx) => {
-      tx.executeSql('INSERT INTO sound_uris (uri) VALUES (?);', [uri], (_, result) => {
-        callback(result.insertId);
-      });
-    },
-    (error) => {
-      console.error("Error inserting sound URI: ", error);
-    }
-  );
-};
-
-const fetchSoundUris = (callback) => {
-  db.transaction((tx) => {
-    tx.executeSql('SELECT * FROM sound_uris;', [], (_, { rows }) => {
-      callback(rows._array.map(row => row.uri));
-    });
-  });
-};
 
 export const database = {
   init,
@@ -169,7 +150,5 @@ export const database = {
   fetchCustomCards,
   insertCardImageUri,
   fetchCardImageUris,
-  insertSoundUri,
-  fetchSoundUris,
   deleteAllCustomCards,
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import Card from '../components/card'; 
-
+//basic gameboard layout
 const GameBoard = ({ cards, onCardFlip }) => {
     const renderCard = (card, index) => (
         <Card 

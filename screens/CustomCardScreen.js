@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Button, Text, Image, Alert } from 'react-native';
 import { Camera } from 'expo-camera';
 import { database } from '../utils/database'; 
-
+//this is where permissions and stuff happen and displaying the camera and allowing users to retake, cancel and save the image.
 const CustomCardScreen = ({ navigation }) => {
   const [hasPermission, setHasPermission] = useState(null);
   const [camera, setCamera] = useState(null);
@@ -14,12 +14,12 @@ const CustomCardScreen = ({ navigation }) => {
       setHasPermission(status === 'granted');
     })();
   }, []);
-
+//take pic
   const takePicture = async () => {
     if (camera) {
       const data = await camera.takePictureAsync(null);
       setImageUri(data.uri);
-
+//options after taking pic
       Alert.alert(
         'Save Picture',
         'Do you want to add this picture to your card combinations?',
@@ -42,7 +42,7 @@ const CustomCardScreen = ({ navigation }) => {
       );
     }
   };
-
+//save the image
   const savePicture = (uri) => {
     database.insertCustomCard(uri, (insertId) => {
       if (insertId) {
@@ -60,11 +60,11 @@ const CustomCardScreen = ({ navigation }) => {
   if (hasPermission === null) {
     return <View />;
   }
-
+//no perm
   if (hasPermission === false) {
     return <Text>No access to camera</Text>;
   }
-
+//take a picture view
   return (
     <View style={styles.container}>
       <Camera style={styles.camera} ref={(ref) => setCamera(ref)}>

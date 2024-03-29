@@ -5,7 +5,7 @@ const isLocalAsset = (uri) => {
   
     return uri && (typeof uri === 'number' || uri.startsWith('require'));
 };
-
+//card functionality with flipping animation, using Animated 
 const Card = ({ imageUri, onFlip, cardIndex, flipped }) => {
     const animatedValue = useRef(new Animated.Value(0)).current;
 

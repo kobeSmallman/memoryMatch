@@ -1,4 +1,5 @@
 export const DIFFICULTY_LEVELS = {
+  //constants for each difficulty level
   Easy: {
     cardCount: 8,
     memorizationTime: 16,

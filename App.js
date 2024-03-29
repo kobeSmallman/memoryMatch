@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, View, StatusBar, Alert } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from './screens/HomeScreen';
 import DifficultyScreen from './screens/DifficultyScreen';
@@ -9,14 +9,21 @@ import CustomCardScreen from './screens/CustomCardScreen';
 import LeaderboardScreen from './screens/LeaderboardsScreen';
 import { Audio } from 'expo-av';
 import { database } from '../memoryMatchKobe/utils/database'; 
-
+//made a basic theme for the app and pages I choose.
 const Stack = createNativeStackNavigator();
-
+const AppTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: '#2c3e50'
+  },
+};
 const App = () => {
+  
   const [userName, setUserName] = useState('');
   const [user, setUser] = useState(null);
   const backgroundSound = useRef(new Audio.Sound());
-
+//background sounds for the game 
   useEffect(() => {
     const loadBackgroundSound = async () => {
       try {
@@ -35,8 +42,8 @@ const App = () => {
 
   useEffect(() => {
     database.init();
-    seedDatabaseWithSoundsAndImages();
-
+    seedDatabaseImages();
+//user exist?
     if (!userName) {
       Alert.prompt(
         'Welcome',
@@ -75,39 +82,10 @@ const App = () => {
       );
     }
   }, [userName]);
+//default  images and sounds
+  const seedDatabaseImages = async () => {
 
-  const seedDatabaseWithSoundsAndImages = async () => {
-    const soundUris = [
-      'assets/sounds/goodSound.mp3',
-      'assets/sounds/badSound.mp3',
-      'assets/sounds/gameScreenSound.mp3',
-      'assets/sounds/defaultSound.mp3',
-    ];
-
-    const cardImageUris = [
-      'assets/images/card1.webp', 
-      'assets/images/card2.webp',
-      'assets/images/card3.webp',
-      'assets/images/card4.webp',
-      'assets/images/card5.webp',
-      'assets/images/card6.webp',
-      'assets/images/card7.webp',
-      'assets/images/card8.webp',
-      'assets/images/card9.webp',
-      'assets/images/card10.webp',
-      'assets/images/card11.webp',
-      'assets/images/card12.webp',
-    ];
-
-    database.fetchSoundUris(uris => {
-      if (uris.length === 0) {
-        soundUris.forEach(uri => {
-          database.insertSoundUri(uri, (insertId) => {
-            console.log(`Inserted sound URI: ${uri}`);
-          });
-        });
-      }
-    });
+  
 
     database.fetchCardImageUris(uris => {
       if (uris.length === 0) {
@@ -119,11 +97,11 @@ const App = () => {
       }
     });
   };
-
+  //returns the game sound, and the sound for all the other pages
   return (
     <View style={styles.container}>
-      <StatusBar style="auto" />
-      <NavigationContainer
+      <StatusBar barStyle="light-content" />
+      <NavigationContainer theme={AppTheme}
         onStateChange={async (state) => {
           const routeName = state.routes[state.index].name;
           if (routeName === 'Game') {
@@ -141,7 +119,18 @@ const App = () => {
           }
         }}
       >
-        <Stack.Navigator initialRouteName="Home">
+        <Stack.Navigator 
+          initialRouteName="Home"
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: '#34495e',
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}
+        >
           <Stack.Screen name="Home">
             {props => <HomeScreen {...props} userName={userName} user={user} />}
           </Stack.Screen>
@@ -162,7 +151,7 @@ const App = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#2c3e50',
   },
 });
 

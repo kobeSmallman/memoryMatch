@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet, Button } from 'react-native';
-
 const DifficultyScreen = ({ navigation }) => {
   const handleDifficultyPress = (difficulty) => {
    
@@ -11,15 +10,15 @@ const DifficultyScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Choose Difficulty</Text>
       <Button
-        title="Easy - 6 cards, 10s, 2 lives"
+        title="Easy - 8 cards"
         onPress={() => handleDifficultyPress('Easy')}
       />
       <Button
-        title="Medium - 8 cards, 6s, 2 lives"
+        title="Medium - 10 cards"
         onPress={() => handleDifficultyPress('Medium')}
       />
       <Button
-        title="Hard - 12 cards, 3s, 1 life"
+        title="Hard - 12 cards"
         onPress={() => handleDifficultyPress('Hard')}
       />
     </View>

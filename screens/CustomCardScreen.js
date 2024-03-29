@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Button, Text, Image } from 'react-native';  // Include Image in the import
+import { View, StyleSheet, Button, Text, Image, Alert } from 'react-native';
 import { Camera } from 'expo-camera';
-
+import { database } from '../utils/database'; 
 
 const CustomCardScreen = ({ navigation }) => {
   const [hasPermission, setHasPermission] = useState(null);
@@ -19,9 +19,43 @@ const CustomCardScreen = ({ navigation }) => {
     if (camera) {
       const data = await camera.takePictureAsync(null);
       setImageUri(data.uri);
-   
+
+      Alert.alert(
+        'Save Picture',
+        'Do you want to add this picture to your card combinations?',
+        [
+          { 
+            text: 'Yes', 
+            onPress: () => savePicture(data.uri) 
+          },
+          { 
+            text: 'Retake', 
+            onPress: () => setImageUri(null)  
+          },
+          { 
+            text: 'Cancel', 
+            onPress: () => setImageUri(null),  
+            style: 'cancel'
+          },
+        ],
+        { cancelable: false }
+      );
     }
   };
+
+  const savePicture = (uri) => {
+    database.insertCustomCard(uri, (insertId) => {
+      if (insertId) {
+        Alert.alert('Success', 'Image added to card combinations!');
+        database.fetchCustomCards((cards) => {
+          console.log('All custom cards:', cards);
+        });
+      } else {
+        Alert.alert('Error', 'Failed to add the image.');
+      }
+    });
+  };
+  
 
   if (hasPermission === null) {
     return <View />;

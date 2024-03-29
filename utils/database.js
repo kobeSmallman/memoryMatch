@@ -4,88 +4,103 @@ const db = SQLite.openDatabase('game.db');
 
 const init = () => {
   db.transaction((tx) => {
+   // tx.executeSql('DROP TABLE IF EXISTS scores;');  // I will Remove this line after the database structure is fixed
+   // tx.executeSql('DROP TABLE IF EXISTS users;');   // I will Remove this line after the database structure is fixed too these are to clear the tables
     tx.executeSql(
       'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY NOT NULL, name TEXT UNIQUE);'
     );
     tx.executeSql(
-      'CREATE TABLE IF NOT EXISTS scores (id INTEGER PRIMARY KEY NOT NULL, user_id INTEGER, score INT, FOREIGN KEY(user_id) REFERENCES users(id));'
+      'CREATE TABLE IF NOT EXISTS scores (' +
+      'id INTEGER PRIMARY KEY NOT NULL, ' +
+      'user_id INTEGER, ' +
+      'score INT, ' +
+      'difficulty TEXT, ' +
+      'FOREIGN KEY(user_id) REFERENCES users(id));'
+      
     );
     tx.executeSql(
-      'CREATE TABLE IF NOT EXISTS custom_cards (id INTEGER PRIMARY KEY NOT NULL, user_id INTEGER, uri TEXT, FOREIGN KEY(user_id) REFERENCES users(id));'
+      'CREATE TABLE IF NOT EXISTS custom_cards (id INTEGER PRIMARY KEY NOT NULL, uri TEXT);'
     );
-    tx.executeSql(
-      'CREATE TABLE IF NOT EXISTS card_images (id INTEGER PRIMARY KEY NOT NULL, uri TEXT);'
-    );
-    tx.executeSql(
-      'CREATE TABLE IF NOT EXISTS sound_uris (id INTEGER PRIMARY KEY NOT NULL, uri TEXT);'
-    );
+    
   }, (error) => {
     console.error("Database initialization failed: ", error);
   }, () => {
     console.log("Database initialization succeeded");
   });
 };
+const deleteAllCustomCards = (callback) => {
+  db.transaction(
+    (tx) => {
+      tx.executeSql('DELETE FROM custom_cards;', [], (_, result) => {
+        console.log('Custom cards deleted, rows affected:', result.rowsAffected);
+        callback(true);
+      });
+    },
+    (error) => {
+      console.error("Error deleting custom cards: ", error);
+      callback(false);
+    }
+  );
+};
+
 const insertUser = (name, callback) => {
   db.transaction(
     (tx) => {
       tx.executeSql(
-        'INSERT INTO users (name) VALUES (?) ON CONFLICT(name) DO NOTHING;', 
+        'INSERT INTO users (name) VALUES (?)', 
         [name], 
-        (_, result) => {
-          if (callback) {
-            callback(result.insertId);
-          }
-        }
+        (_, result) => callback(result.insertId)
       );
     },
-    (error) => {
-      console.error("Error inserting user: ", error);
-    }
+    (error) => console.error("Error inserting user: ", error)
   );
 };
+
 const fetchUserByName = (name, callback) => {
   db.transaction((tx) => {
     tx.executeSql(
-      'SELECT * FROM users WHERE name = ?;', 
-      [name], 
-      (_, { rows }) => {
-        callback(rows._array[0]);  
-      }
+      'SELECT * FROM users WHERE name = ?;',
+      [name],
+      (_, { rows }) => callback(rows.length > 0 ? rows._array[0] : null),
+      (_, error) => console.error("Error fetching user by name: ", error)
     );
   });
 };
 
 
-const insertScore = (score, callback) => {
+const insertScore = ({ user_id, score, difficulty }, callback) => {
   db.transaction(
     (tx) => {
-      tx.executeSql('INSERT INTO scores (score) VALUES (?);', [score], (_, result) => {
-        if (callback) {
-          callback(result.insertId);
-        }
-      });
+      tx.executeSql(
+        'INSERT INTO scores (user_id, score, difficulty) VALUES (?, ?, ?);', 
+        [user_id, score, difficulty], 
+        (_, result) => callback && callback(result.insertId)
+      );
     },
-    (error) => {
-      console.error("Error inserting score: ", error);
-    }
+    (error) => console.error("Error inserting score: ", error)
   );
 };
 
+
+
 const fetchScores = (callback) => {
   db.transaction((tx) => {
-    tx.executeSql('SELECT * FROM scores;', [], (_, { rows }) => {
-      callback(rows._array);
-    });
+    tx.executeSql(
+      'SELECT users.name, scores.score, scores.difficulty FROM scores INNER JOIN users ON users.id = scores.user_id ORDER BY scores.score DESC;',
+      [],
+      (_, { rows }) => callback(rows._array),
+      (error) => console.error("Error fetching scores: ", error)
+    );
   });
 };
+
+
 
 const insertCustomCard = (uri, callback) => {
   db.transaction(
     (tx) => {
       tx.executeSql('INSERT INTO custom_cards (uri) VALUES (?);', [uri], (_, result) => {
-        if (callback) {
-          callback(result.insertId);
-        }
+        callback(result.insertId);
       });
     },
     (error) => {
@@ -102,14 +117,11 @@ const fetchCustomCards = (callback) => {
   });
 };
 
-// New methods for inserting and retrieving default card image URIs
 const insertCardImageUri = (uri, callback) => {
   db.transaction(
     (tx) => {
       tx.executeSql('INSERT INTO card_images (uri) VALUES (?);', [uri], (_, result) => {
-        if (callback) {
-          callback(result.insertId);
-        }
+        callback(result.insertId);
       });
     },
     (error) => {
@@ -125,37 +137,39 @@ const fetchCardImageUris = (callback) => {
     });
   });
 };
+
 const insertSoundUri = (uri, callback) => {
-    db.transaction(
-      (tx) => {
-        tx.executeSql('INSERT INTO sound_uris (uri) VALUES (?);', [uri], (_, result) => {
-          if (callback) {
-            callback(result.insertId);
-          }
-        });
-      },
-      (error) => {
-        console.error("Error inserting sound URI: ", error);
-      }
-    );
-  };
-  
-  const fetchSoundUris = (callback) => {
-    db.transaction((tx) => {
-      tx.executeSql('SELECT * FROM sound_uris;', [], (_, { rows }) => {
-        callback(rows._array.map(row => row.uri));
+  db.transaction(
+    (tx) => {
+      tx.executeSql('INSERT INTO sound_uris (uri) VALUES (?);', [uri], (_, result) => {
+        callback(result.insertId);
       });
+    },
+    (error) => {
+      console.error("Error inserting sound URI: ", error);
+    }
+  );
+};
+
+const fetchSoundUris = (callback) => {
+  db.transaction((tx) => {
+    tx.executeSql('SELECT * FROM sound_uris;', [], (_, { rows }) => {
+      callback(rows._array.map(row => row.uri));
     });
-  };
-  
-  export const database = {
-    init,
-    insertScore,
-    fetchScores,
-    insertCustomCard,
-    fetchCustomCards,
-    insertCardImageUri,
-    fetchCardImageUris,
-    insertSoundUri,
-    fetchSoundUris,
-  };
+  });
+};
+
+export const database = {
+  init,
+  insertUser,
+  fetchUserByName,
+  insertScore,
+  fetchScores,
+  insertCustomCard,
+  fetchCustomCards,
+  insertCardImageUri,
+  fetchCardImageUris,
+  insertSoundUri,
+  fetchSoundUris,
+  deleteAllCustomCards,
+};

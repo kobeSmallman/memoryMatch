@@ -1,5 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Image, Animated } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+
+const isLocalAsset = (uri) => {
+  
+    return uri && (typeof uri === 'number' || uri.startsWith('require'));
+};
+
 const Card = ({ imageUri, onFlip, cardIndex, flipped }) => {
     const animatedValue = useRef(new Animated.Value(0)).current;
 
@@ -22,11 +28,21 @@ const Card = ({ imageUri, onFlip, cardIndex, flipped }) => {
         opacity: flipped ? 0 : 1,
     };
 
+    const renderCardImage = () => {
+        if (isLocalAsset(imageUri)) {
+    
+            return <Image source={imageUri} style={styles.cardImage} />;
+        } else {
+           
+            return <Image source={{ uri: imageUri }} style={styles.cardImage} />;
+        }
+    };
+
     return (
         <TouchableOpacity onPress={() => onFlip(cardIndex)}>
             <View style={styles.card}>
                 <Animated.View style={[styles.cardSide, frontAnimatedStyle]}>
-                    <Image source={imageUri} style={styles.cardImage} />
+                    {renderCardImage()}
                 </Animated.View>
                 <Animated.View style={[styles.cardSide, styles.cardBack, backAnimatedStyle]}>
                     <Image source={require('../assets/images/splash.png')} style={styles.cardImage} />
@@ -35,7 +51,6 @@ const Card = ({ imageUri, onFlip, cardIndex, flipped }) => {
         </TouchableOpacity>
     );
 };
-
 
 const styles = StyleSheet.create({
     card: {
